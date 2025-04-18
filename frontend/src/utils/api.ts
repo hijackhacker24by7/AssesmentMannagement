@@ -277,93 +277,153 @@ export const deleteAssessment = async (token: string, assessmentId: string) => {
 
 // Submission API
 export const getUserSubmissions = async (token: string) => {
-  const response = await fetch(`${API_URL}/submissions/user`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to fetch user submissions');
+  try {
+    const response = await fetch(`${API_URL}/submissions/user`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    // Check if the response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error('Server returned non-JSON response: ' + (text.substring(0, 100) + '...'));
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch user submissions');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Fetch user submissions error:', error);
+    throw error;
   }
-  
-  return data;
 };
 
 export const getAllSubmissions = async (token: string) => {
-  const response = await fetch(`${API_URL}/submissions`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to fetch all submissions');
+  try {
+    const response = await fetch(`${API_URL}/submissions`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    // Check if the response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error('Server returned non-JSON response: ' + (text.substring(0, 100) + '...'));
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch all submissions');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Fetch all submissions error:', error);
+    throw error;
   }
-  
-  return data;
 };
 
 export const getSubmissionById = async (token: string, submissionId: string) => {
-  const response = await fetch(`${API_URL}/submissions/${submissionId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to fetch submission');
+  try {
+    const response = await fetch(`${API_URL}/submissions/${submissionId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    // Check if the response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error('Server returned non-JSON response: ' + (text.substring(0, 100) + '...'));
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch submission');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Fetch submission error:', error);
+    throw error;
   }
-  
-  return data;
 };
 
 export const submitAssessment = async (token: string, assessmentId: string, content: string, tabSwitches?: number) => {
-  const response = await fetch(`${API_URL}/submissions/${assessmentId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify({ content, tabSwitches }),
-  });
-  
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to submit assessment');
+  try {
+    const response = await fetch(`${API_URL}/submissions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ assessmentId, content, tabSwitches }),
+    });
+    
+    // Check if the response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error('Server returned non-JSON response: ' + (text.substring(0, 100) + '...'));
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to submit assessment');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Submit assessment error:', error);
+    throw error;
   }
-  
-  return data;
 };
 
 export const evaluateSubmission = async (token: string, submissionId: string, grade: number, feedback?: string) => {
-  const response = await fetch(`${API_URL}/submissions/${submissionId}/evaluate`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify({ grade, feedback }),
-  });
-  
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to evaluate submission');
+  try {
+    const response = await fetch(`${API_URL}/submissions/${submissionId}/evaluate`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ grade, feedback }),
+    });
+    
+    // Check if the response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error('Server returned non-JSON response: ' + (text.substring(0, 100) + '...'));
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to evaluate submission');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Evaluate submission error:', error);
+    throw error;
   }
-  
-  return data;
 };

@@ -4,11 +4,17 @@ import { useAuth } from '../context/AuthContext';
 import { getAssessmentById, submitAssessment } from '../utils/api';
 import SecureNotepad from '../components/SecureNotepad';
 
+interface Question {
+  questionText: string;
+  instructions: string;
+  maxPoints: number;
+}
+
 interface Assessment {
   _id: string;
   title: string;
   description: string;
-  questions: string;
+  questions: Question[] | string; // Support both formats for backward compatibility
 }
 
 const TakeAssessment = () => {
@@ -129,7 +135,21 @@ const TakeAssessment = () => {
           <div className="mb-8">
             <h2 className="text-lg font-semibold mb-2">Questions:</h2>
             <div className="bg-gray-50 p-4 rounded border border-gray-200 whitespace-pre-line">
-              {assessment.questions}
+              {typeof assessment.questions === 'string' ? (
+                assessment.questions
+              ) : (
+                <div>
+                  {assessment.questions.map((question, index) => (
+                    <div key={index} className="mb-4">
+                      <p className="font-bold">{index + 1}. {question.questionText}</p>
+                      {question.instructions && (
+                        <p className="text-gray-700 mt-1">{question.instructions}</p>
+                      )}
+                      <p className="text-sm text-gray-500 mt-1">Points: {question.maxPoints}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           

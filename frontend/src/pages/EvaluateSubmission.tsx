@@ -151,7 +151,19 @@ const EvaluateSubmission = () => {
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-2">Assessment Questions:</h2>
             <div className="bg-gray-50 p-4 rounded border border-gray-200 whitespace-pre-line">
-              {submission.assessment.questions}
+              {Array.isArray(submission.assessment.questions) ? (
+                submission.assessment.questions.map((question, index) => (
+                  <div key={question._id} className="mb-4">
+                    <p className="font-bold">{index + 1}. {question.questionText}</p>
+                    {question.instructions && (
+                      <p className="text-gray-700 mt-1">{question.instructions}</p>
+                    )}
+                    <p className="text-sm text-gray-500 mt-1">Points: {question.maxPoints}</p>
+                  </div>
+                ))
+              ) : (
+                <p>{submission.assessment.questions}</p>
+              )}
             </div>
           </div>
 

@@ -9,8 +9,17 @@ const createAssessment = async (req, res) => {
     const { title, description, questions, timeLimit } = req.body;
 
     // Check if required fields are provided
-    if (!title || !description || !questions || questions.length === 0) {
-      return res.status(400).json({ message: 'Please provide all required fields' });
+    if (!title || !description || !questions || !Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ message: 'Please provide all required fields and ensure questions is a non-empty array' });
+    }
+
+    // Validate each question object
+    for (const question of questions) {
+      if (!question.questionText || !question.instructions || typeof question.maxPoints !== 'number') {
+        return res.status(400).json({
+          message: 'Each question must have questionText, instructions, and maxPoints (number)'
+        });
+      }
     }
 
     // Create new assessment
