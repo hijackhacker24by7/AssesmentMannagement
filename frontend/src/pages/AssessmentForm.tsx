@@ -12,7 +12,13 @@ const AssessmentForm = () => {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [questions, setQuestions] = useState('');
+  interface Question {
+    questionText: string;
+    instructions: string;
+    maxPoints: number;
+  }
+
+  const [questions, setQuestions] = useState<Question[]>([]); // Updated to handle questions as an array
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fetchingAssessment, setFetchingAssessment] = useState(isEditMode);
@@ -39,32 +45,48 @@ const AssessmentForm = () => {
     fetchAssessment();
   }, [isEditMode, user, id]);
 
+  const handleQuestionChange = (index: number, field: string, value: any) => {
+    setQuestions((prevQuestions) => {
+      const updatedQuestions = [...prevQuestions];
+      updatedQuestions[index] = { ...updatedQuestions[index], [field]: value };
+      return updatedQuestions;
+    });
+  };
+
+  const addQuestion = () => {
+    setQuestions((prevQuestions) => [...prevQuestions, { questionText: '', instructions: '', maxPoints: 0 }]);
+  };
+
+  const removeQuestion = (index: number) => {
+    setQuestions((prevQuestions) => prevQuestions.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
-    if (!title || !description || !questions) {
-      setError('All fields are required');
+    if (!title || !description || questions.length === 0) {
+      setError('All fields are required, and questions cannot be empty');
       return;
     }
-    
+
     if (!user?.token) {
       setError('You must be logged in to perform this action');
       return;
     }
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       const assessmentData = { title, description, questions };
-      
+
       if (isEditMode && id) {
         await updateAssessment(user.token, id, assessmentData);
       } else {
         await createAssessment(user.token, assessmentData);
       }
-      
+
       navigate('/admin-dashboard');
     } catch (error) {
       console.error('Error saving assessment:', error);
@@ -129,17 +151,48 @@ const AssessmentForm = () => {
             </div>
 
             <div className="mb-6">
-              <label htmlFor="questions" className="block text-sm font-medium text-gray-700 mb-1">
-                Questions/Content
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Questions
               </label>
-              <textarea
-                id="questions"
-                value={questions}
-                onChange={(e) => setQuestions(e.target.value)}
-                rows={10}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter the assessment questions or content here"
-              />
+              {questions.map((question, index) => (
+                <div key={index} className="mb-4 border p-4 rounded">
+                  <input
+                    type="text"
+                    placeholder="Question Text"
+                    value={question.questionText}
+                    onChange={(e) => handleQuestionChange(index, 'questionText', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 mb-2"
+                  />
+                  <textarea
+                    placeholder="Instructions"
+                    value={question.instructions}
+                    onChange={(e) => handleQuestionChange(index, 'instructions', e.target.value)}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 mb-2"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Max Points"
+                    value={question.maxPoints}
+                    onChange={(e) => handleQuestionChange(index, 'maxPoints', parseInt(e.target.value, 10))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 mb-2"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeQuestion(index)}
+                    className="text-red-500 hover:underline"
+                  >
+                    Remove Question
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addQuestion}
+                className="text-blue-500 hover:underline"
+              >
+                Add Question
+              </button>
             </div>
 
             <div className="flex justify-end space-x-3">
