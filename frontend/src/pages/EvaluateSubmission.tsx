@@ -84,6 +84,12 @@ const EvaluateSubmission = () => {
       return;
     }
 
+    // Validate feedback - adding this check
+    if (!feedback.trim()) {
+      setError('Please provide feedback for this submission.');
+      return;
+    }
+
     try {
       setSubmitting(true);
       await evaluateSubmission(user.token, id, numericGrade, feedback);

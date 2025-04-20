@@ -16,6 +16,10 @@ const SubmissionSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Submission content is required'],
     },
+    mcqResponses: {
+      type: Object,
+      default: {}
+    },
     tabSwitches: {
       type: Number,
       default: 0,
@@ -35,6 +39,24 @@ const SubmissionSchema = new mongoose.Schema(
     },
     evaluatedAt: {
       type: Date,
+    },
+    challenge: {
+      status: {
+        type: String,
+        enum: ['pending', 'resolved', 'accepted', 'rejected', 'reviewing'],
+      },
+      reason: {
+        type: String,
+      },
+      adminResponse: {
+        type: String,
+      },
+      challengeDate: {
+        type: Date,
+      },
+      resolvedDate: {
+        type: Date,
+      }
     },
   },
   {

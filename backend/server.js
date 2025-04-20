@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const assessmentRoutes = require('./routes/assessmentRoutes');
 const submissionRoutes = require('./routes/submissionRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(cors());
 app.use('/api/users', userRoutes);
 app.use('/api/assessments', assessmentRoutes);
 app.use('/api/submissions', submissionRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Root route
 app.get('/', (req, res) => {

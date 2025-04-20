@@ -122,6 +122,68 @@ export const getUserProfile = async (token: string) => {
   }
 };
 
+export const updateUserPassword = async (token: string, currentPassword: string, newPassword: string) => {
+  try {
+    const response = await fetch(`${API_URL}/users/update-password`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    
+    // Check if the response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error('Server returned non-JSON response: ' + (text.substring(0, 100) + '...'));
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to update password');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Password update error:', error);
+    throw error;
+  }
+};
+
+export const updateUserProfile = async (token: string, profileData: { userId?: string; email?: string }) => {
+  try {
+    const response = await fetch(`${API_URL}/users/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(profileData),
+    });
+    
+    // Check if the response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error('Server returned non-JSON response: ' + (text.substring(0, 100) + '...'));
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to update profile');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Update profile error:', error);
+    throw error;
+  }
+};
+
 // Assessment API
 export const getAssessments = async (token: string) => {
   try {
@@ -275,6 +337,66 @@ export const deleteAssessment = async (token: string, assessmentId: string) => {
   }
 };
 
+// Category Management
+export const getCategories = async (token: string) => {
+  try {
+    const response = await fetch(`${API_URL}/categories`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error('Server returned non-JSON response: ' + (text.substring(0, 100) + '...'));
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch categories');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Fetch categories error:', error);
+    throw error;
+  }
+};
+
+export const createCategory = async (token: string, categoryData: { name: string; description?: string }) => {
+  try {
+    const response = await fetch(`${API_URL}/categories`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(categoryData),
+    });
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error('Server returned non-JSON response: ' + (text.substring(0, 100) + '...'));
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to create category');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Create category error:', error);
+    throw error;
+  }
+};
+
 // Submission API
 export const getUserSubmissions = async (token: string) => {
   try {
@@ -366,7 +488,7 @@ export const getSubmissionById = async (token: string, submissionId: string) => 
   }
 };
 
-export const submitAssessment = async (token: string, assessmentId: string, content: string, tabSwitches?: number) => {
+export const submitAssessment = async (token: string, assessmentId: string, content: string, tabSwitches?: number, multipleChoiceAnswers?: Record<string, string[]>) => {
   try {
     const response = await fetch(`${API_URL}/submissions`, {
       method: 'POST',
@@ -374,7 +496,7 @@ export const submitAssessment = async (token: string, assessmentId: string, cont
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ assessmentId, content, tabSwitches }),
+      body: JSON.stringify({ assessmentId, content, tabSwitches, multipleChoiceAnswers }),
     });
     
     // Check if the response is JSON
@@ -427,3 +549,67 @@ export const evaluateSubmission = async (token: string, submissionId: string, gr
     throw error;
   }
 };
+
+// Challenge Management
+export const challengeEvaluation = async (token: string, submissionId: string, reason: string) => {
+  try {
+    const response = await fetch(`${API_URL}/submissions/${submissionId}/challenge`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ reason }),
+    });
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error('Server returned non-JSON response: ' + (text.substring(0, 100) + '...'));
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to submit challenge');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Challenge submission error:', error);
+    throw error;
+  }
+};
+
+export const respondToChallenge = async (token: string, submissionId: string, response: string) => {
+  try {
+    const apiResponse = await fetch(`${API_URL}/submissions/${submissionId}/respond-challenge`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ response }),
+    });
+    
+    const contentType = apiResponse.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await apiResponse.text();
+      throw new Error('Server returned non-JSON response: ' + (text.substring(0, 100) + '...'));
+    }
+    
+    const data = await apiResponse.json();
+    
+    if (!apiResponse.ok) {
+      throw new Error(data.message || 'Failed to respond to challenge');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Challenge response error:', error);
+    throw error;
+  }
+};
+
+// Alias for challengeEvaluation for better naming consistency
+export const submitChallenge = challengeEvaluation;

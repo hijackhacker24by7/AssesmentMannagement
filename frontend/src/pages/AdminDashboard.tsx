@@ -75,9 +75,14 @@ const AdminDashboard = () => {
       try {
         await deleteAssessment(user.token, id);
         setAssessments(assessments.filter(assessment => assessment._id !== id));
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error deleting assessment:', error);
-        setError('Failed to delete assessment. Please try again.');
+        // Check for the specific error message from the backend about submissions
+        if (error.message && error.message.includes('submissions')) {
+          setError('Cannot delete an assessment that has submissions. Deactivate it instead if needed.');
+        } else {
+          setError(error.message || 'Failed to delete assessment. Please try again.');
+        }
       }
     }
   };

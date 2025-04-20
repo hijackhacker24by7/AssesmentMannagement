@@ -19,7 +19,8 @@ interface AuthContextType {
   registerAdmin: (userId: string, email: string, password: string, adminSecret?: string) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Export the AuthContext so it can be imported in test files
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

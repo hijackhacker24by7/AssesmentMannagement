@@ -6,7 +6,7 @@ const Assessment = require('../models/Assessment');
 // @access  Private
 const createSubmission = async (req, res) => {
   try {
-    const { assessmentId, content, tabSwitches } = req.body;
+    const { assessmentId, content, tabSwitches, multipleChoiceAnswers } = req.body;
 
     // Check if required fields are provided
     if (!assessmentId || !content) {
@@ -34,11 +34,21 @@ const createSubmission = async (req, res) => {
       return res.status(400).json({ message: 'You have already submitted this assessment' });
     }
 
+    // Convert multipleChoiceAnswers to a format suitable for MongoDB storage
+    let mcqResponses = {};
+    if (multipleChoiceAnswers && typeof multipleChoiceAnswers === 'object') {
+      // Copy the object rather than directly assigning to avoid reference issues
+      Object.keys(multipleChoiceAnswers).forEach(key => {
+        mcqResponses[key] = multipleChoiceAnswers[key];
+      });
+    }
+
     // Create new submission
     const submission = await Submission.create({
       user: req.user._id,
       assessment: assessmentId,
       content,
+      mcqResponses,
       tabSwitches: tabSwitches || 0,
     });
 
@@ -246,6 +256,119 @@ const getSubmissionsByAssessment = async (req, res) => {
   }
 };
 
+// @desc    Submit a challenge for a submission evaluation
+// @route   POST /api/submissions/:id/challenge
+// @access  Private
+const submitChallenge = async (req, res) => {
+  try {
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({ message: 'Please provide a reason for the challenge' });
+    }
+
+    const submission = await Submission.findById(req.params.id);
+
+    if (!submission) {
+      return res.status(404).json({ message: 'Submission not found' });
+    }
+
+    // Check if user has permission to challenge this submission
+    if (submission.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to challenge this submission' });
+    }
+
+    // Check if submission is evaluated
+    if (submission.evaluationStatus !== 'evaluated') {
+      return res.status(400).json({ message: 'Only evaluated submissions can be challenged' });
+    }
+
+    // Check if submission already has a challenge
+    if (submission.challenge && submission.challenge.status) {
+      return res.status(400).json({ message: 'This submission already has an active challenge' });
+    }
+
+    // Add challenge to submission
+    submission.challenge = {
+      status: 'pending',
+      reason,
+      challengeDate: Date.now()
+    };
+
+    const updatedSubmission = await submission.save();
+    res.json(updatedSubmission);
+  } catch (error) {
+    console.error(error);
+    
+    // Check if error is due to invalid ObjectId
+    if (error.kind === 'ObjectId') {
+      return res.status(404).json({ message: 'Submission not found' });
+    }
+    
+    res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+};
+
+// @desc    Respond to a challenge
+// @route   PUT /api/submissions/:id/respond-challenge
+// @access  Private/Admin
+const respondToChallenge = async (req, res) => {
+  try {
+    const { response } = req.body;
+    let challengeStatus = 'resolved';
+
+    if (!response) {
+      return res.status(400).json({ message: 'Please provide a response to the challenge' });
+    }
+
+    // Check if user has admin permission
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to respond to challenges' });
+    }
+
+    const submission = await Submission.findById(req.params.id);
+
+    if (!submission) {
+      return res.status(404).json({ message: 'Submission not found' });
+    }
+
+    // Check if submission has a pending challenge
+    if (!submission.challenge || (submission.challenge.status !== 'pending' && submission.challenge.status !== 'reviewing')) {
+      return res.status(400).json({ message: 'This submission does not have a pending or reviewing challenge' });
+    }
+
+    // Determine status from response text
+    if (response.includes('[Status: ACCEPTED]')) {
+      challengeStatus = 'accepted';
+    } else if (response.includes('[Status: REJECTED]')) {
+      challengeStatus = 'rejected';
+    } else if (response.includes('[Status: REVIEWING]')) {
+      challengeStatus = 'reviewing';
+    }
+
+    // Update challenge status and add response
+    submission.challenge.status = challengeStatus;
+    submission.challenge.adminResponse = response;
+    
+    // Add resolved date if the challenge is being resolved
+    if (challengeStatus !== 'reviewing') {
+      submission.challenge.resolvedDate = Date.now();
+    }
+
+    const updatedSubmission = await submission.save();
+    res.json(updatedSubmission);
+  } catch (error) {
+    console.error(error);
+    
+    // Check if error is due to invalid ObjectId
+    if (error.kind === 'ObjectId') {
+      return res.status(404).json({ message: 'Submission not found' });
+    }
+    
+    res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+};
+
 module.exports = {
   createSubmission,
   getSubmissionsByUser,
@@ -253,5 +376,7 @@ module.exports = {
   getSubmissionById,
   updateSubmission,
   evaluateSubmission,
-  getSubmissionsByAssessment
+  getSubmissionsByAssessment,
+  submitChallenge,
+  respondToChallenge
 };
